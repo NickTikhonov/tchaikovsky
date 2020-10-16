@@ -1,5 +1,7 @@
 # Tch(ai)kovsky
 
+[Demo](https://github.com/NickTikhonov/tchaikovsky/releases/download/0.1.0/sample.mp3)
+
 A layman's attempt at generating music using deep learning and LSTMs :) 
 
 The model is able to train on a large corpus of MIDI data and produce some reasonable sounding MIDI.

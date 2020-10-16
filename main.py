@@ -1,12 +1,11 @@
-import numpy as np
-import pathlib
-import datetime
-import numpy
-from music21 import converter, instrument, note, chord, stream
-import glob
-import pandas as pd
-from tqdm import tqdm
 from collections import defaultdict
+import datetime
+import pathlib
+
+import numpy as np
+import glob
+from tqdm import tqdm
+from music21 import converter, instrument, note, chord, stream
 
 import tensorflow as tf
 config = tf.compat.v1.ConfigProto()
@@ -107,6 +106,15 @@ class Piece:
             assert prev.t < note.t
         self.notes.append(note)
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 class Note:
     # Midi pitches are in values of 0-127.
     def __init__(self, t, midi_pitch):
@@ -194,6 +202,15 @@ class Note:
     def __repr__(self):
         return f"<Note {self.t} {[x for x in sorted(list(self.mp))]}>"
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
         
 
 class ListEncoder:
@@ -211,9 +228,6 @@ class ListEncoder:
 
     def size(self):
         return self.n
-
-
-
 
 
 def build_model(input_shape, out_size):
@@ -253,7 +267,7 @@ def generate(model, seed_seq, num_notes):
     seq = seed_seq
     music = []
     for _ in tqdm(range(200)):
-        input = numpy.reshape(seq, (1, len(seq), 3))
+        input = np.reshape(seq, (1, len(seq), 3))
         output = model.predict(input, verbose=0)
         music.append(output[0])
         seq = seq.tolist()
@@ -276,5 +290,6 @@ if __name__ == "__main__":
     train_y = np.array(train_y)
 
     model = build_model((train_x.shape[1], train_x.shape[2]), train_y.shape[1])
-    train(model, train_x, train_y, epochs=1)
+    model.load_weights('models/weights-improvement-576-0.0005-bigger.hdf5')
+    # train(model, train_x, train_y, epochs=1)
     generate(model, train_x[0], 150).to_midi("output/out.midi")

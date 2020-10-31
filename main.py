@@ -241,13 +241,12 @@ def build_model(input_shape, out_size):
     model.add(tf.keras.layers.LSTM(512,
         input_shape=input_shape, 
         return_sequences=True))
-    # model.add(SeqSelfAttention(attention_activation='sigmoid'))
+    model.add(SeqSelfAttention(attention_activation='sigmoid'))
     model.add(tf.keras.layers.Dropout(0.3))
     
-    model.add(tf.keras.layers.LSTM(512, return_sequences=True))
+    model.add(tf.keras.layers.LSTM(512))
     model.add(tf.keras.layers.Dropout(0.3))
 
-    model.add(tf.keras.layers.Dense(256))
     model.add(tf.keras.layers.Dense(out_size))
     model.add(tf.keras.layers.Activation('linear'))
     model.compile(loss='mse', optimizer='rmsprop')
@@ -272,7 +271,7 @@ def generate(model, seed_seq, num_notes):
     music = []
     for _ in tqdm(range(200)):
         # TODO: Fix that shape constant
-        input = np.reshape(seq, (1, len(seq), 4))
+        input = np.reshape(seq, (1, len(seq), 6))
         output = model.predict(input, verbose=0)
         music.append(output[0])
         seq = seq.tolist()
@@ -285,16 +284,32 @@ def generate(model, seed_seq, num_notes):
 if __name__ == "__main__":
     train_x = []
     train_y = []
-    for fname in tqdm(glob.glob("data/mozart/*.mid")):
+    for fname in tqdm(glob.glob("data/**/*.mid")[0:10]):
         p = Piece.from_midi(fname)
-        xs, ys = p.get_sequences(seq_len=100, max_chord=3, max_dist=24)
+        xs, ys = p.get_sequences(seq_len=100, max_chord=5, max_dist=24)
         train_x.extend(xs)
         train_y.extend(ys)
 
     train_x = np.array(train_x)
     train_y = np.array(train_y)
 
+    # with open('train_x.npy', 'wb') as f:
+    #      np.save(f, train_x)
+    # with open('train_y.npy', 'wb') as f:
+    #      np.save(f, train_y)
+
+    # train_x = np.load('train_x.npy')
+    # print(train_x[0])
+    # train_y = np.load('train_y.npy')
+    # print(train_y[0])
+
+    print("Building model")
     model = build_model((train_x.shape[1], train_x.shape[2]), train_y.shape[1])
-    # model.load_weights('models/weights-improvement-60-0.0014-bigger.hdf5')
-    train(model, train_x, train_y, epochs=10)
-    generate(model, train_x[0], 150).to_midi("output/with-self-attention.midi")
+
+    print("Loading weights")
+    model.load_weights('models/weights-improvement-63-0.0071-bigger.hdf5')
+    # train(model, train_x, train_y, epochs=400)
+
+    print("Generating music")
+    for i in range(10):
+        generate(model, train_x[i*5], 150).to_midi(f"output/with-self-attention-{i}.midi")

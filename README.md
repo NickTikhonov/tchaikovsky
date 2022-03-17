@@ -2,7 +2,7 @@
 
 [Demo of generated music after 600 epochs](https://github.com/NickTikhonov/tchaikovsky/releases/download/0.1.0/sample.mp3)
 
-A layman's attempt at generating music using deep learning and LSTMs :) 
+A layman's attempt at generating music with LSTMs :) 
 
 The model is able to train on a large corpus of MIDI data and produce some reasonable sounding MIDI.
 There is a focus on representing data in a way to allow the generation of chords, and learning of harmony.
